@@ -1,0 +1,20 @@
+# Compilaciones y archivos temporales
+*.exe
+*.dll
+*.log
+*.dmp
+*.mdmp
+*.hdmp
+*.tmp
+*.part
+*.zip
+bin/
+dist/
+# Diagnósticos privados y reportes locales
+Reports/
+reports/
+activity.log
+*diagnostic*.json
+*diagnostic*.csv
+.DS_Store
+Thumbs.db
