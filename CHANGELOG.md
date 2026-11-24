@@ -1,11 +1,10 @@
-# Historial de cambios
+# Cambios
 
-## 2.7.0 — Edición Individual (pre-release)
-- Vista comparativa: versión instalada vs. disponible.
-- Estado por componente y arquitectura.
-- Inventario y consultas del catálogo oficial.
-- Selección de fila para operaciones de descarga/instalación.
+## v3.0.0-pre
 
-### Limitaciones conocidas
-- La selección no abre un panel detallado; está previsto mejorarla.
-- El ejecutable no está firmado ni validado con pruebas de interfaz automatizadas en Windows.
+- Conserva el diseño azul y la edición individual.
+- Agrega secciones de seguridad/CVE (coincidencias NVD no confirmadas), dependencias, limpieza de solo lectura, diagnóstico DISM /CheckHealth y consulta de GitHub Releases.
+- Hace explícita la selección de fila y exige una selección válida antes de descargar.
+- Mantiene descarga desde Microsoft, verificación SHA-512, verificación de firma y solicitud de autorización para abrir instaladores.
+- Ejecuta consultas y diagnósticos en tareas separadas con tiempo límite y cancelación.
+- Requiere validación de la interfaz en Windows antes de producción.

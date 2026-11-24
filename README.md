@@ -1,50 +1,64 @@
-# NET Update Manager — Individual (v2.7)
+# NET Update Manager — Individual 3.0 (versión preliminar)
 
-Administrador **local** de componentes .NET para Windows 10 y Windows 11 x64.
+Aplicación **local** para Windows 10/11 x64, con una interfaz gráfica azul basada en Win32 y desarrollada en Go. No controla equipos remotos ni utiliza Active Directory.
 
-> **Estado: versión preliminar / pruebas.** Se ha compilado, pero no cuenta con certificación de seguridad ni pruebas completas en Windows real. No usar para instalaciones críticas sin validación previa. El ejecutable no está firmado digitalmente.
+## Empezar
 
-## Funciones
+1. Descomprime el ZIP completo.
+2. Abre `NETUpdateManager.exe` con doble clic.
+3. Pulsa **Verificar ahora** para detectar los runtimes instalados.
+4. Pulsa **Consultar Microsoft** en Actualizaciones para comparar las versiones del mismo componente y arquitectura.
+5. Selecciona una fila, revisa el estado, descarga y verifica el instalador oficial. La instalación requiere confirmación.
 
-- Inventario local de .NET Framework 4.x y runtimes .NET (x64 y x86).
-- Comparación de versiones **instaladas** y **disponibles** para la misma familia, componente y arquitectura.
-- Consulta del índice de versiones de Microsoft.
-- Descarga de instaladores oficiales con verificación de SHA-512 y firma digital.
-- Instalación únicamente tras aprobación del usuario; no desinstala runtimes antiguos automáticamente.
-- Exportación de resultados y registros locales.
+## Funciones 3.0
 
-## Cómo usar
+| Sección | Qué hace realmente |
+|---|---|
+| Actualizaciones inteligentes | Compara la versión más alta instalada con la última publicada para la misma familia principal, tipo y arquitectura. No migra aplicaciones automáticamente. |
+| Seguridad / CVE | Consulta coincidencias de palabras clave en el servicio público NVD. Son **candidatos no confirmados**, no vulnerabilidades demostradas del equipo. El estado de fin de soporte también se muestra por separado. |
+| Dependencias | Examina archivos `*.runtimeconfig.json` de Program Files y Program Files (x86) con límites de tiempo, profundidad y tamaño. No garantiza encontrar todas las aplicaciones. |
+| Limpieza segura | Identifica parches anteriores dentro de una misma familia/arquitectura y muestra una **lista de revisión**. NO desinstala ni borra nada. |
+| Diagnóstico y reparación | Comprueba las rutas dotnet y ejecuta `DISM /Online /Cleanup-Image /CheckHealth` (solo consulta). Ofrece enlace a la guía oficial de reparación. NO realiza una reparación automática. |
+| Actualización desde GitHub | Comprueba la última Release estable publicada en el repositorio indicado y permite abrir la página Releases. No ejecuta binarios de GitHub automáticamente. |
+| Descarga e instalación .NET | Usa metadatos oficiales de Microsoft, verifica SHA-512 y firma Authenticode. Solo lanza el instalador después de confirmación. |
 
-1. Descarga el archivo ZIP desde **Releases** (no desde el botón Code).
-2. Descomprímelo en una carpeta local.
-3. Ejecuta `NETUpdateManager.exe`.
-4. Pulsa **Verificar ahora**; después **Consultar Microsoft**.
-5. Revisa cuidadosamente las versiones antes de descargar o instalar.
+## Seguridad y limitaciones
 
-**Nota sobre «Seleccionar»:** en esta versión selecciona/resalta la fila para las acciones inferiores; no abre una ventana modal. La mejora de interacción está pendiente.
+- Es una versión **pre-release**. La compilación cruzada y `go vet` se completaron, pero la interfaz y todas las rutas de red aún requieren pruebas en un equipo Windows real.
+- El ejecutable no está firmado digitalmente. Windows SmartScreen puede advertir sobre programas desconocidos.
+- Ninguna opción elimina los runtimes obsoletos automáticamente.
+- No se ejecutan reparaciones, instalaciones ni limpieza sin aprobación explícita.
+- NVD devuelve CVE candidatos por palabra clave; no hay correlación de versiones CPE verificada. **No afirmes que una coincidencia es un CVE aplicable**.
+- Las aplicaciones empaquetadas/self-contained y los runtimes de rutas no estándar pueden no aparecer en el análisis.
+- Las consultas pueden fallar por proxy, TLS, limitación de servicios o Internet ausente. Deben mostrar errores sin afectar el diagnóstico local.
+- El uso de `DISM` puede requerir permisos elevados para algunas consultas; la app mostrará el resultado.
 
-## Código fuente y compilación
+## Datos y privacidad
 
-Requiere Go 1.23 o posterior (solo biblioteca estándar). En Windows PowerShell, desde la raíz:
+Los reportes y el registro local se guardan en `C:\ProgramData\NETUpdateManager`. El inventario puede incluir nombres de equipo y rutas de aplicaciones. No publiques esos archivos sin revisarlos. La app solo consulta NVD, Microsoft y la API pública de GitHub cuando lo solicitas.
+
+## Compilación
+
+En Windows con Go 1.23 o más reciente:
 
 ```powershell
-$env:GOOS = 'windows'
-$env:GOARCH = 'amd64'
-go build -ldflags='-H windowsgui -s -w' -o NETUpdateManager.exe ./src
+go test ./src
+go vet ./src
+go build -trimpath -ldflags="-H windowsgui -s -w" -o NETUpdateManager.exe ./src
+python -m pip install Pillow
+python embed_icon.py
 ```
 
-También hay un workflow en **Actions → Build Windows x64 → Run workflow** para compilar. El workflow produce un artifact; **no** publica una Release automáticamente.
+`embed_icon.py` agrega el recurso ICO al PE resultante. Es una herramienta de empaquetado, no debe ejecutarse sobre un EXE ya modificado.
 
-## Seguridad y privacidad
+## Pruebas recomendadas
 
-- Diseñado para analizar **una PC local**; no utiliza Active Directory ni ejecuta despliegues remotos.
-- La información diagnóstica se guarda localmente en `C:\ProgramData\NETUpdateManager`.
-- **No subas** los reportes generados, volcados `.dmp`, nombres internos de equipos ni archivos con datos sensibles al repositorio.
-- Verifica que un instalador corresponda al componente y arquitectura adecuados antes de aprobar cambios.
-- La categorización del estado de soporte no constituye un análisis integral de vulnerabilidades.
+1. Abrir/cerrar y cambiar de sección repetidamente.
+2. Analizar con x86 y x64 disponibles, y cuando no exista una instalación de .NET.
+3. Consultar el catálogo con Internet, sin Internet y con proxy restrictivo.
+4. Iniciar y cancelar consulta de CVE y de dependencias; la ventana debe responder.
+5. Verificar que la lista de limpieza **no** elimine archivos.
+6. Comprobar que descargar no sea equivalente a instalar, y que la instalación requiera confirmación.
+7. Revisar `activity.log` si se produce un bloqueo AppHangB1.
 
-## Estado legal
-
-Este repositorio **no incluye una licencia de software**. Todos los derechos permanecen reservados al titular del código hasta que decida publicar una licencia (por ejemplo, MIT). No se agrega una licencia sin autorización.
-
-Consulta [docs/PUBLICACION.md](docs/PUBLICACION.md) para las instrucciones de subida.
+Este proyecto es una herramienta de ayuda para administradores, no reemplaza Microsoft Update ni un escáner de vulnerabilidades certificado.

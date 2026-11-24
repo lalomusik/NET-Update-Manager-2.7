@@ -1,3 +1,3 @@
-module github.com/REEMPLAZA-TU-USUARIO/NET-Update-Manager
+module netupdatemanager/local
 
 go 1.23
